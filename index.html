@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>赛博电子烟花 - V8 Final</title>
+  <title>赛博电子烟花 - V9</title>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3/camera_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils@0.3/control_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/hands.js" crossorigin="anonymous"></script>
@@ -280,7 +280,6 @@
     <div class="control-group">
       <div class="label-row"><span>文字大小缩放</span><span id="val-size">1.0</span></div>
       <input type="range" id="p-size" min="0.5" max="2.0" step="0.1" value="1.0">
-      <div style="font-size:12px; color:#666">调节文字烟花炸开的整体尺寸</div>
     </div>
     
     <div class="control-group">
@@ -397,139 +396,137 @@
       constructor(x, y) {
         this.x = x;
         this.y = y;
-        this.vx = (Math.random() - 0.5) * 2;
-        this.vy = -PARAMS.speed - Math.random() * 4;
-        this.exploded = false;
-        this.trail = [];
+        this.vy = -(Math.random() * 5 + 12);
+        this.vx = (Math.random() - 0.5) * 4;
+        this.targetY = y - (height * 0.4 + Math.random() * 150);
         this.hue = PARAMS.hue === -1 ? Math.random() * 360 : PARAMS.hue;
+        this.trail = [];
       }
       
       update() {
-        if (!this.exploded) {
-          this.y += this.vy;
-          this.vy += 0.15;
-          
-          this.trail.push({x: this.x, y: this.y, alpha: 1});
-          this.trail = this.trail.filter(t => {
-            t.alpha -= 0.05;
-            return t.alpha > 0;
-          });
-          
-          if (this.vy >= 0) {
-            this.explode();
-            return false;
-          }
-          return true;
+        this.vy += PARAMS.gravity * 0.5;
+        this.x += this.vx;
+        this.y += this.vy;
+        
+        this.trail.push({x: this.x, y: this.y});
+        if (this.trail.length > 20) {
+          this.trail.shift();
         }
-        return false;
+        
+        if (this.vy >= -1 || this.y <= this.targetY) {
+          this.explode();
+          return false;
+        }
+        return true;
+      }
+      
+      draw(ctx) {
+        ctx.strokeStyle = `hsl(${this.hue}, 100%, 70%)`;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        this.trail.forEach((p, i) => {
+          if (i === 0) ctx.moveTo(p.x, p.y);
+          else ctx.lineTo(p.x, p.y);
+        });
+        ctx.stroke();
       }
       
       explode() {
-        this.exploded = true;
-        
         let shape = PARAMS.shape;
         if (shape === 'RANDOM') {
           const shapes = ['SPHERE', 'RING', 'STAR', 'HEART', 'TEXT'];
           shape = shapes[Math.floor(Math.random() * shapes.length)];
         }
         
+        if (shape === 'TEXT') {
+          this.explodeText();
+        } else {
+          this.explodeGeometry(shape);
+        }
+        
+        // 闪光
+        particles.push(new Particle(this.x, this.y, 0, 0, '#fff'));
+      }
+      
+      explodeGeometry(shape) {
         const count = PARAMS.particleCount;
         
-        // 文字烟花特殊处理
-        if (shape === 'TEXT') {
-          const lines = PARAMS.textRaw.split('\n').filter(t => t.trim());
-          const text = lines[Math.floor(Math.random() * lines.length)] || '🎆';
-          createTextFirework(this.x, this.y, text);
-          return;
-        }
-        
         for (let i = 0; i < count; i++) {
+          const speed = PARAMS.speed * (0.8 + Math.random() * 0.4) * PARAMS.sizeScale;
           let vx, vy;
-          const speed = Math.random() * 6 + 2;
-          const h = this.hue + (Math.random() - 0.5) * PARAMS.variance;
-          const color = `hsl(${h}, 100%, 60%)`;
           
           if (shape === 'SPHERE') {
-            const angle = Math.random() * Math.PI * 2;
-            vx = Math.cos(angle) * speed;
-            vy = Math.sin(angle) * speed;
+            const a = Math.random() * Math.PI * 2;
+            const r = Math.random();
+            vx = Math.cos(a) * speed * r;
+            vy = Math.sin(a) * speed * r;
           } else if (shape === 'RING') {
-            const angle = Math.random() * Math.PI * 2;
-            vx = Math.cos(angle) * speed * 0.6;
-            vy = Math.sin(angle) * speed * 0.6;
+            const a = Math.random() * Math.PI * 2;
+            vx = Math.cos(a) * speed;
+            vy = Math.sin(a) * speed * 0.7;
           } else if (shape === 'STAR') {
-            const angle = (Math.floor(Math.random() * 5) * Math.PI * 2 / 5);
-            vx = Math.cos(angle) * speed;
-            vy = Math.sin(angle) * speed;
+            const a = (i / count) * Math.PI * 2;
+            const r = 1 + Math.sin(a * 5);
+            vx = Math.cos(a) * speed * r * 0.5;
+            vy = Math.sin(a) * speed * r * 0.5;
           } else if (shape === 'HEART') {
-            const t = Math.random() * Math.PI * 2;
-            vx = speed * Math.sin(t) * Math.cos(t);
-            vy = speed * Math.sin(t) - 1;
-          } else {
-            vx = (Math.random() - 0.5) * 10;
-            vy = (Math.random() - 0.5) * 10;
+            const a = Math.random() * Math.PI * 2;
+            const r = speed * 0.1;
+            vx = r * 16 * Math.pow(Math.sin(a), 3);
+            vy = -r * (13 * Math.cos(a) - 5 * Math.cos(2 * a) - 2 * Math.cos(3 * a) - Math.cos(4 * a));
           }
           
-          particles.push(new Particle(this.x, this.y, vx, vy, color));
+          const h = this.hue + (Math.random() - 0.5) * PARAMS.variance;
+          particles.push(new Particle(this.x, this.y, vx, vy, `hsl(${h}, 100%, 60%)`));
         }
       }
       
-      draw(ctx) {
-        // 绘制轨迹
-        this.trail.forEach(t => {
-          ctx.fillStyle = `rgba(255, 100, 50, ${t.alpha * 0.5})`;
-          ctx.beginPath();
-          ctx.arc(t.x, t.y, 3 * t.alpha, 0, Math.PI * 2);
-          ctx.fill();
-        });
+      explodeText() {
+        // 1. 随机选取一行文本
+        const lines = PARAMS.textRaw.split('\n').filter(l => l.trim() !== '');
+        const text = lines.length > 0 ? lines[Math.floor(Math.random() * lines.length)] : "🎆";
         
-        // 绘制火箭
-        if (!this.exploded) {
-          ctx.fillStyle = '#ff6432';
-          ctx.shadowColor = '#ff6432';
-          ctx.shadowBlur = 15;
-          ctx.beginPath();
-          ctx.arc(this.x, this.y, 4, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.shadowBlur = 0;
-        }
-      }
-    }
-    
-    // 文字烟花
-    function createTextFirework(x, y, text) {
-      const fontSize = 80 * PARAMS.sizeScale;
-      textCanvas.width = fontSize * text.length * 0.7;
-      textCanvas.height = fontSize * 1.5;
-      
-      textCtx.clearRect(0, 0, textCanvas.width, textCanvas.height);
-      textCtx.font = `bold ${fontSize}px "Microsoft YaHei", sans-serif`;
-      textCtx.fillStyle = '#fff';
-      textCtx.textBaseline = 'middle';
-      textCtx.fillText(text, textCanvas.width / 2, textCanvas.height / 2);
-      
-      const imgData = textCtx.getImageData(0, 0, textCanvas.width, textCanvas.height);
-      const data = imgData.data;
-      
-      const step = Math.max(2, Math.floor(textCanvas.width / 100));
-      const scaleFactor = 1.5;
-      
-      for (let py = 0; py < textCanvas.height; py += step) {
-        for (let px = 0; px < textCanvas.width; px += step) {
-          if (data[(py * textCanvas.width + px) * 4 + 3] > 128) {
-            const pX = (px - textCanvas.width / 2) * scaleFactor;
-            const pY = (py - textCanvas.height / 2) * scaleFactor;
-            const speedMult = 0.15;
-            
-            const h = PARAMS.hue === -1 ? Math.random() * 360 : PARAMS.hue + (Math.random() - 0.5) * PARAMS.variance;
-            const color = `hsl(${h}, 100%, 60%)`;
-            
-            particles.push(new Particle(
-              x, y,
-              pX * speedMult + (Math.random() - 0.5) * 0.5,
-              pY * speedMult + (Math.random() - 0.5) * 0.5,
-              color
-            ));
+        // 2. 采样配置
+        const fontSize = 150;
+        textCtx.font = `bold ${fontSize}px "Microsoft YaHei", sans-serif`;
+        const measure = textCtx.measureText(text);
+        
+        // 3. 自动缩放算法 (Auto-Fit)
+        const targetWidth = 300 * PARAMS.sizeScale;
+        const scaleFactor = targetWidth / measure.width;
+        
+        textCanvas.width = measure.width;
+        textCanvas.height = fontSize * 1.5;
+        
+        textCtx.clearRect(0, 0, textCanvas.width, textCanvas.height);
+        textCtx.font = `bold ${fontSize}px "Microsoft YaHei", sans-serif`;
+        textCtx.fillStyle = '#fff';
+        textCtx.textBaseline = 'middle';
+        textCtx.fillText(text, textCanvas.width / 2, textCanvas.height / 2);
+        
+        const imgData = textCtx.getImageData(0, 0, textCanvas.width, textCanvas.height);
+        const data = imgData.data;
+        
+        const step = Math.max(2, Math.floor(textCanvas.width / 100));
+        
+        for (let py = 0Canvas.height; py += step) {
+; py < text          for (let px = 0; px < textCanvas.width; px += step) {
+            if (data[(py * textCanvas.width + px) * 4 + 3] > 128) {
+              // 坐标转换
+              const pX = (px - textCanvas.width / 2) * scaleFactor;
+              const pY = (py - textCanvas.height / 2) * scaleFactor;
+              
+              const speedMult = 0.15;
+              const h = PARAMS.hue === -1 ? Math.random() * 360 : PARAMS.hue + (Math.random() - 0.5) * PARAMS.variance;
+              
+              particles.push(new Particle(
+                this.x,
+                this.y,
+                pX * speedMult + (Math.random() - 0.5) * 0.5,
+                pY * speedMult + (Math.random() - 0.5) * 0.5,
+                `hsl(${h}, 100%, 60%)`
+              ));
+            }
           }
         }
       }
@@ -546,45 +543,10 @@
         shape = shapes[Math.floor(Math.random() * shapes.length)];
       }
       
-      // 文字烟花
-      if (shape === 'TEXT') {
-        const lines = PARAMS.textRaw.split('\n').filter(t => t.trim());
-        const text = lines[Math.floor(Math.random() * lines.length)] || '🎆';
-        createTextFirework(x, y, text);
-        return;
-      }
-      
-      const count = PARAMS.particleCount;
-      const h = PARAMS.hue === -1 ? Math.random() * 360 : PARAMS.hue;
-      
-      for (let i = 0; i < count; i++) {
-        let vx, vy;
-        const speed = Math.random() * 6 + 2;
-        const color = `hsl(${h + (Math.random() - 0.5) * PARAMS.variance}, 100%, 60%)`;
-        
-        if (shape === 'SPHERE') {
-          const angle = Math.random() * Math.PI * 2;
-          vx = Math.cos(angle) * speed;
-          vy = Math.sin(angle) * speed;
-        } else if (shape === 'RING') {
-          const angle = Math.random() * Math.PI * 2;
-          vx = Math.cos(angle) * speed;
-          vy = Math.sin(angle) * speed;
-        } else if (shape === 'STAR') {
-          const angle = (Math.floor(Math.random() * 5) * Math.PI * 2 / 5);
-          vx = Math.cos(angle) * speed;
-          vy = Math.sin(angle) * speed;
-        } else if (shape === 'HEART') {
-          const t = Math.random() * Math.PI * 2;
-          vx = speed * Math.sin(t) * Math.cos(t);
-          vy = speed * Math.sin(t) - 1;
-        } else {
-          vx = (Math.random() - 0.5) * 10;
-          vy = (Math.random() - 0.5) * 10;
-        }
-        
-        particles.push(new Particle(x, y, vx, vy, color));
-      }
+      const rocket = new Rocket(x, y);
+      rocket.y = y;
+      rocket.targetY = y - 200;
+      rocket.explode();
     }
     
     // --- 4. 渲染循环 ---
@@ -594,7 +556,6 @@
       if (!isRunning) return;
       
       // 拖尾效果
-      ctx.globalCompositeOperation = 'source-over';
       ctx.fillStyle = `rgba(0, 0, 0, ${PARAMS.trail})`;
       ctx.fillRect(0, 0, width, height);
       
@@ -645,12 +606,10 @@
         
         const lm = results.multiHandLandmarks[0];
         
-        // 食指位置
         handState.x = (1 - lm[8].x) * width;
         handState.y = lm[8].y * height;
         handState.detected = true;
         
-        // 检测捏合
         const thumbTip = lm[4];
         const indexTip = lm[8];
         const distance = Math.hypot(
@@ -663,12 +622,11 @@
         const now = Date.now();
         if (distance < 50 && now - lastPinchTime > 500) {
           lastPinchTime = now;
-          // 发射烟花
           for (let i = 0; i < 3; i++) {
             setTimeout(() => {
               createRocket(
                 Math.random() * width * 0.6 + width * 0.2,
-                height * 0.3 + Math.random() * height * 0.2
+                height * 0.8
               );
             }, i * 100);
           }
@@ -720,7 +678,6 @@
     
     // --- 6. UI 逻辑 ---
     function initUI() {
-      // 形状切换
       const btns = document.querySelectorAll('.shape-btn');
       const textContainer = document.getElementById('text-input-container');
       btns.forEach(btn => {
@@ -732,14 +689,12 @@
         });
       });
       
-      // 文本域监听
       const textarea = document.getElementById('firework-text');
       PARAMS.textRaw = textarea.value;
       textarea.addEventListener('input', (e) => {
         PARAMS.textRaw = e.target.value;
       });
       
-      // 绑定滑块
       function bindSlider(id, key, dispId) {
         const el = document.getElementById(id);
         const disp = document.getElementById(dispId);
@@ -760,7 +715,6 @@
       bindSlider('hue-slider', 'hue', 'val-hue');
       bindSlider('p-brightness', 'brightness', 'val-brightness');
       
-      // 面板开关
       let visible = true;
       const p = document.getElementById('control-panel');
       const b = document.getElementById('toggle-panel');
@@ -780,18 +734,16 @@
       await initCamera();
       animate();
       
-      // 自动发射
       setInterval(() => {
         if (isRunning && Math.random() < 0.2) {
           createRocket(
             Math.random() * width * 0.7 + width * 0.15,
-            height * 0.2 + Math.random() * height * 0.3
+            height * 0.8
           );
         }
       }, 600);
     });
     
-    // 点击事件
     canvas.addEventListener('click', (e) => {
       if (isRunning) {
         createClickExplosion(e.clientX, e.clientY);
