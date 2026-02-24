@@ -8,11 +8,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils@0.3/control_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/hands.js" crossorigin="anonymous"></script>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     
     body {
       margin: 0;
@@ -21,23 +17,14 @@
       font-family: "Microsoft YaHei", sans-serif;
     }
     
-    #input_video {
-      display: none;
-    }
-    
-    canvas {
-      display: block;
-      width: 100vw;
-      height: 100vh;
-    }
+    #input_video { display: none; }
+    canvas { display: block; width: 100vw; height: 100vh; }
     
     /* 启动遮罩 */
     #overlay {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
       background: rgba(0, 0, 0, 0.85);
       display: flex;
       justify-content: center;
@@ -47,9 +34,7 @@
       backdrop-filter: blur(5px);
     }
     
-    #overlay.hidden {
-      display: none;
-    }
+    #overlay.hidden { display: none; }
     
     #start-btn {
       padding: 15px 50px;
@@ -64,9 +49,7 @@
       font-family: "Microsoft YaHei";
     }
     
-    #start-btn:hover {
-      transform: scale(1.05);
-    }
+    #start-btn:hover { transform: scale(1.05); }
     
     #loading-text {
       color: #888;
@@ -75,11 +58,10 @@
       letter-spacing: 1px;
     }
     
-    /* 控制台样式 */
+    /* 控制台 */
     #control-panel {
       position: absolute;
-      top: 10px;
-      right: 10px;
+      top: 10px; right: 10px;
       width: 300px;
       max-height: 95vh;
       background: rgba(15, 15, 25, 0.95);
@@ -96,16 +78,12 @@
       scrollbar-color: #555 #1a1a1a;
     }
     
-    #control-panel.hidden {
-      transform: translateX(320px);
-    }
+    #control-panel.hidden { transform: translateX(320px); }
     
     #toggle-panel {
       position: absolute;
-      top: 10px;
-      right: 320px;
-      width: 40px;
-      height: 40px;
+      top: 10px; right: 320px;
+      width: 40px; height: 40px;
       background: rgba(15, 15, 25, 0.8);
       border: 1px solid rgba(255,255,255,0.2);
       border-radius: 8px;
@@ -119,9 +97,7 @@
       transition: right 0.3s ease;
     }
     
-    #toggle-panel.right {
-      right: 10px;
-    }
+    #toggle-panel.right { right: 10px; }
     
     h2 {
       margin: 0 0 15px 0;
@@ -130,7 +106,6 @@
       letter-spacing: 2px;
       text-align: center;
       font-weight: bold;
-      text-shadow: 0 0 10px rgba(160,160,255,0.3);
     }
     
     h3 {
@@ -161,9 +136,7 @@
       transition: all 0.2s;
     }
     
-    .shape-btn:hover {
-      background: #333;
-    }
+    .shape-btn:hover { background: #333; }
     
     .shape-btn.active {
       background: #fff;
@@ -174,10 +147,7 @@
     }
     
     /* 文本框 */
-    #text-input-container {
-      margin-bottom: 15px;
-      display: none;
-    }
+    #text-input-container { margin-bottom: 15px; display: none; }
     
     textarea#firework-text {
       width: 100%;
@@ -195,15 +165,10 @@
       line-height: 1.5;
     }
     
-    textarea#firework-text:focus {
-      outline: none;
-      border-color: #6c5ce7;
-    }
+    textarea#firework-text:focus { outline: none; border-color: #6c5ce7; }
     
     /* 滑块 */
-    .control-group {
-      margin-bottom: 12px;
-    }
+    .control-group { margin-bottom: 12px; }
     
     .label-row {
       display: flex;
@@ -242,7 +207,6 @@
       background: linear-gradient(to right, red, yellow, lime, cyan, blue, magenta, red);
     }
     
-    /* 提示 */
     .hint {
       position: fixed;
       bottom: 30px;
@@ -272,16 +236,13 @@
       display: none;
     }
     
-    .gesture-hint.visible {
-      display: block;
-    }
+    .gesture-hint.visible { display: block; }
   </style>
 </head>
 <body>
   <video id="input_video" playsinline></video>
   <canvas id="canvas"></canvas>
   
-  <!-- 启动遮罩 -->
   <div id="overlay">
     <button id="start-btn">启动 赛博烟花系统</button>
     <div id="loading-text">请允许摄像头权限 • 捏合手指发射烟花</div>
@@ -294,16 +255,16 @@
     
     <h3>烟花形状</h3>
     <div class="shape-grid">
-      <button class="shape-btn" data-shape="sphere">球形</button>
-      <button class="shape-btn" data-shape="ring">圆环</button>
-      <button class="shape-btn" data-shape="star">五角星</button>
-      <button class="shape-btn" data-shape="heart">爱心</button>
-      <button class="shape-btn active" data-shape="text">文字(定制)</button>
-      <button class="shape-btn" data-shape="random">随机</button>
+      <button class="shape-btn" data-shape="SPHERE">球形</button>
+      <button class="shape-btn" data-shape="RING">圆环</button>
+      <button class="shape-btn" data-shape="STAR">五角星</button>
+      <button class="shape-btn" data-shape="HEART">爱心</button>
+      <button class="shape-btn active" data-shape="TEXT">文字(定制)</button>
+      <button class="shape-btn" data-shape="RANDOM">随机</button>
     </div>
     
     <div id="text-input-container" style="display:block;">
-      <textarea id="firework-text" placeholder="在此输入文案，一行一句">马到成功
+      <textarea id="firework-text">马到成功
 新年快乐
 恭喜发财
 万事如意</textarea>
@@ -312,52 +273,34 @@
     
     <h3>物理参数</h3>
     <div class="control-group">
-      <div class="label-row">
-        <span>粒子数量</span>
-        <span id="val-particles">300</span>
-      </div>
+      <div class="label-row"><span>粒子数量</span><span id="val-particles">300</span></div>
       <input type="range" id="p-particles" min="100" max="800" value="300">
     </div>
     
     <div class="control-group">
-      <div class="label-row">
-        <span>文字大小缩放</span>
-        <span id="val-size">1.0</span>
-      </div>
+      <div class="label-row"><span>文字大小缩放</span><span id="val-size">1.0</span></div>
       <input type="range" id="p-size" min="0.5" max="2.0" step="0.1" value="1.0">
       <div style="font-size:12px; color:#666">调节文字烟花炸开的整体尺寸</div>
     </div>
     
     <div class="control-group">
-      <div class="label-row">
-        <span>重力系数</span>
-        <span id="val-gravity">0.12</span>
-      </div>
+      <div class="label-row"><span>重力系数</span><span id="val-gravity">0.12</span></div>
       <input type="range" id="p-gravity" min="0" max="30" value="12">
     </div>
     
     <h3>视觉效果</h3>
     <div class="control-group">
-      <div class="label-row">
-        <span>拖尾长度</span>
-        <span id="val-trail">0.15</span>
-      </div>
+      <div class="label-row"><span>拖尾长度</span><span id="val-trail">0.15</span></div>
       <input type="range" id="p-trail" min="5" max="50" value="15">
     </div>
     
     <div class="control-group">
-      <div class="label-row">
-        <span>颜色基调</span>
-        <span id="val-hue">彩色/随机</span>
-      </div>
+      <div class="label-row"><span>颜色基调</span><span id="val-hue">彩色/随机</span></div>
       <input type="range" id="hue-slider" min="-1" max="360" value="-1">
     </div>
     
     <div class="control-group">
-      <div class="label-row">
-        <span>亮度</span>
-        <span id="val-brightness">1.0</span>
-      </div>
+      <div class="label-row"><span>亮度</span><span id="val-brightness">1.0</span></div>
       <input type="range" id="p-brightness" min="0.2" max="2" step="0.1" value="1.0">
     </div>
   </div>
@@ -368,7 +311,7 @@
   <script>
     // --- 1. 配置参数 ---
     const PARAMS = {
-      shape: 'text',
+      shape: 'TEXT',
       textRaw: "马到成功\n新年快乐\n恭喜发财\n万事如意",
       particleCount: 300,
       sizeScale: 1.0,
@@ -381,136 +324,74 @@
       brightness: 1.0
     };
     
+    // --- 2. 画布初始化 ---
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
-    const video = document.getElementById('input_video');
+    const textCanvas = document.createElement('canvas');
+    const textCtx = textCanvas.getContext('2d');
     
     let width, height;
     let particles = [];
-    let fireworks = [];
+    let rockets = [];
     let isRunning = false;
     let lastPinchTime = 0;
     let camera = null;
     let hands = null;
     
     function resize() {
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width;
+      canvas.height = height;
+      textCanvas.width = width;
+      textCanvas.height = height;
     }
     
     window.addEventListener('resize', resize);
     resize();
     
-    // --- 粒子系统 ---
+    // --- 3. 粒子类 ---
     class Particle {
-      constructor(x, y, shape = 'sphere', text = '') {
+      constructor(x, y, vx, vy, color) {
         this.x = x;
         this.y = y;
-        this.shape = shape;
-        this.text = text;
-        this.init();
-      }
-      
-      init() {
-        this.life = 1;
-        this.decay = 0.012 + Math.random() * 0.008;
-        
-        const angle = Math.random() * Math.PI * 2;
-        const speed = Math.random() * 8 + 2;
-        
-        if (this.shape === 'sphere') {
-          this.vx = Math.cos(angle) * speed;
-          this.vy = Math.sin(angle) * speed;
-        } else if (this.shape === 'ring') {
-          const ringAngle = Math.random() * Math.PI * 2;
-          const ringSpeed = 3 + Math.random() * 2;
-          this.vx = Math.cos(ringAngle) * ringSpeed;
-          this.vy = Math.sin(ringAngle) * ringSpeed;
-        } else if (this.shape === 'star') {
-          const starAngle = (Math.floor(Math.random() * 5) * Math.PI * 2 / 5) + (Math.random() - 0.5) * 0.5;
-          const starSpeed = Math.random() * 6 + 2;
-          this.vx = Math.cos(starAngle) * starSpeed;
-          this.vy = Math.sin(starAngle) * starSpeed;
-        } else if (this.shape === 'heart') {
-          const t = Math.random() * Math.PI * 2;
-          const heartSpeed = Math.random() * 5 + 2;
-          this.vx = heartSpeed * Math.sin(t) * Math.cos(t);
-          this.vy = heartSpeed * Math.sin(t) - 1;
-        } else if (this.shape === 'text' && this.text) {
-          this.vx = (Math.random() - 0.5) * 6;
-          this.vy = -Math.random() * 8 - 2;
-          this.charIndex = Math.floor(Math.random() * this.text.length);
-          this.char = this.text[this.charIndex];
-          this.angle = Math.random() * Math.PI * 2;
-          this.angularVelocity = (Math.random() - 0.5) * 0.2;
-        } else {
-          this.vx = (Math.random() - 0.5) * 10;
-          this.vy = (Math.random() - 0.5) * 10;
-        }
-        
-        // 颜色
-        if (PARAMS.hue === -1) {
-          const h = Math.random() * 360;
-          this.color = `hsl(${h}, 100%, ${60 * PARAMS.brightness}%)`;
-        } else {
-          const h = PARAMS.hue + (Math.random() - 0.5) * PARAMS.variance;
-          this.color = `hsl(${h}, 100%, ${60 * PARAMS.brightness}%)`;
-        }
-        
-        this.size = Math.random() * 3 + 2;
-        this.originalSize = this.size;
+        this.vx = vx;
+        this.vy = vy;
+        this.color = color;
+        this.alpha = 1;
+        this.decay = Math.random() * 0.015 + 0.005;
       }
       
       update() {
+        this.vx *= PARAMS.friction;
+        this.vy *= PARAMS.friction;
+        this.vy += PARAMS.gravity;
         this.x += this.vx;
         this.y += this.vy;
-        this.vy += PARAMS.gravity;
-        this.vx *= PARAMS.friction;
-        this.life -= this.decay;
-        
-        if (this.shape === 'text' && this.char) {
-          this.angle += this.angularVelocity;
-        }
-        
-        this.size = this.originalSize * this.life;
+        this.alpha -= this.decay;
       }
       
-      draw() {
+      draw(ctx) {
         ctx.save();
-        ctx.globalAlpha = this.life * PARAMS.brightness;
-        
-        if (this.shape === 'text' && this.char) {
-          ctx.translate(this.x, this.y);
-          ctx.rotate(this.angle);
-          ctx.font = `${this.size * 12 * PARAMS.sizeScale}px "Microsoft YaHei", Arial`;
-          ctx.fillStyle = this.color;
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.shadowColor = this.color;
-          ctx.shadowBlur = 10;
-          ctx.fillText(this.char, 0, 0);
-        } else {
-          ctx.beginPath();
-          ctx.fillStyle = this.color;
-          ctx.shadowColor = this.color;
-          ctx.shadowBlur = 8;
-          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        
+        ctx.globalAlpha = this.alpha * PARAMS.brightness;
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
+        ctx.fill();
         ctx.restore();
       }
       
       isDead() {
-        return this.life <= 0 || this.size < 0.3;
+        return this.alpha <= 0;
       }
     }
     
-    // 烟花发射器
-    class Firework {
+    // 火箭类
+    class Rocket {
       constructor(x, y) {
         this.x = x;
         this.y = y;
+        this.vx = (Math.random() - 0.5) * 2;
         this.vy = -PARAMS.speed - Math.random() * 4;
         this.exploded = false;
         this.trail = [];
@@ -521,10 +402,10 @@
           this.y += this.vy;
           this.vy += 0.15;
           
-          this.trail.push({x: this.x, y: this.y, life: 1});
+          this.trail.push({x: this.x, y: this.y, alpha: 1});
           this.trail = this.trail.filter(t => {
-            t.life -= 0.05;
-            return t.life > 0;
+            t.alpha -= 0.05;
+            return t.alpha > 0;
           });
           
           if (this.vy >= 0) {
@@ -537,37 +418,79 @@
         this.exploded = true;
         
         let shape = PARAMS.shape;
-        if (shape === 'random') {
-          const shapes = ['sphere', 'ring', 'star', 'heart'];
+        if (shape === 'RANDOM') {
+          const shapes = ['SPHERE', 'RING', 'STAR', 'HEART'];
           shape = shapes[Math.floor(Math.random() * shapes.length)];
         }
         
-        let text = '';
-        if (shape === 'text') {
-          const lines = PARAMS.textRaw.split('\n').filter(t => t.trim());
-          text = lines[Math.floor(Math.random() * lines.length)] || '🎆';
+        const count = PARAMS.particleCount;
+        
+        for (let i = 0; i < count; i++) {
+          let vx, vy;
+          const angle = Math.random() * Math.PI * 2;
+          const speed = Math.random() * 6 + 2;
+          
+          if (shape === 'SPHERE') {
+            vx = Math.cos(angle) * speed;
+            vy = Math.sin(angle) * speed;
+          } else if (shape === 'RING') {
+            const ringAngle = Math.random() * Math.PI * 2;
+            vx = Math.cos(ringAngle) * (speed * 0.6);
+            vy = Math.sin(ringAngle) * (speed * 0.6);
+          } else if (shape === 'STAR') {
+            const starAngle = (Math.floor(Math.random() * 5) * Math.PI * 2 / 5);
+            vx = Math.cos(starAngle) * speed;
+            vy = Math.sin(starAngle) * speed;
+          } else if (shape === 'HEART') {
+            const t = Math.random() * Math.PI * 2;
+            vx = speed * Math.sin(t) * Math.cos(t);
+            vy = speed * Math.sin(t) - 1;
+          } else if (shape === 'TEXT') {
+            vx = (Math.random() - 0.5) * 8;
+            vy = -Math.random() * 8 - 2;
+          } else {
+            vx = (Math.random() - 0.5) * 10;
+            vy = (Math.random() - 0.5) * 10;
+          }
+          
+          let color;
+          if (PARAMS.hue === -1) {
+            const h = Math.random() * 360;
+            color = `hsl(${h}, 100%, 60%)`;
+          } else {
+            const h = PARAMS.hue + (Math.random() - 0.5) * PARAMS.variance;
+            color = `hsl(${h}, 100%, 60%)`;
+          }
+          
+          particles.push(new Particle(this.x, this.y, vx, vy, color));
         }
         
-        for (let i = 0; i < PARAMS.particleCount; i++) {
-          particles.push(new Particle(this.x, this.y, shape, text));
+        // 文字烟花特殊处理
+        if (shape === 'TEXT') {
+          const lines = PARAMS.textRaw.split('\n').filter(t => t.trim());
+          const text = lines[Math.floor(Math.random() * lines.length)] || '🎆';
+          drawTextParticles(text);
         }
       }
       
-      draw() {
+      draw(ctx) {
+        // 绘制轨迹
         this.trail.forEach(t => {
+          ctx.fillStyle = `rgba(255, 100, 50, ${t.alpha * 0.5})`;
           ctx.beginPath();
-          ctx.fillStyle = `rgba(255, 100, 50, ${t.life * 0.5})`;
-          ctx.arc(t.x, t.y, 3 * t.life, 0, Math.PI * 2);
+          ctx.arc(t.x, t.y, 3 * t.alpha, 0, Math.PI * 2);
           ctx.fill();
         });
         
+        // 绘制火箭
         if (!this.exploded) {
-          ctx.beginPath();
           ctx.fillStyle = '#ff6432';
           ctx.shadowColor = '#ff6432';
           ctx.shadowBlur = 15;
+          ctx.beginPath();
           ctx.arc(this.x, this.y, 4, 0, Math.PI * 2);
           ctx.fill();
+          ctx.shadowBlur = 0;
         }
       }
       
@@ -576,57 +499,146 @@
       }
     }
     
-    function createFirework(x, y) {
-      fireworks.push(new Firework(x, y));
+    // 文字粒子
+    let textParticles = [];
+    
+    function drawTextParticles(text) {
+      textCtx.clearRect(0, 0, width, height);
+      textCtx.font = `${80 * PARAMS.sizeScale}px "Microsoft YaHei", Arial`;
+      textCtx.textAlign = 'center';
+      textCtx.textBaseline = 'middle';
+      
+      const metrics = textCtx.measureText(text);
+      const textWidth = metrics.width;
+      const textHeight = 80 * PARAMS.sizeScale;
+      
+      // 在画布上绘制文字
+      textCtx.fillStyle = '#fff';
+      textCtx.fillText(text, width / 2, height / 2);
+      
+      // 获取文字像素
+      const imageData = textCtx.getImageData(0, 0, width, height);
+      const data = imageData.data;
+      
+      // 采样创建粒子
+      const step = 3;
+      for (let y = 0; y < height; y += step) {
+        for (let x = 0; x < width; x += step) {
+          const i = (y * width + x) * 4;
+          if (data[i + 3] > 128) {
+            let color;
+            if (PARAMS.hue === -1) {
+              const h = Math.random() * 360;
+              color = `hsl(${h}, 100%, 60%)`;
+            } else {
+              color = `hsl(${PARAMS.hue}, 100%, 60%)`;
+            }
+            particles.push(new Particle(
+              x,
+              y,
+              (Math.random() - 0.5) * 2,
+              (Math.random() - 0.5) * 2 - 2,
+              color
+            ));
+          }
+        }
+      }
+      
+      textCtx.clearRect(0, 0, width, height);
     }
     
-    function createClickFirework(x, y) {
+    function createRocket(x, y) {
+      rockets.push(new Rocket(x, y));
+    }
+    
+    function createClickExplosion(x, y) {
       let shape = PARAMS.shape;
-      if (shape === 'random') {
-        const shapes = ['sphere', 'ring', 'star', 'heart'];
+      if (shape === 'RANDOM') {
+        const shapes = ['SPHERE', 'RING', 'STAR', 'HEART'];
         shape = shapes[Math.floor(Math.random() * shapes.length)];
       }
       
-      let text = '';
-      if (shape === 'text') {
-        const lines = PARAMS.textRaw.split('\n').filter(t => t.trim());
-        text = lines[Math.floor(Math.random() * lines.length)] || '🎆';
+      const count = PARAMS.particleCount;
+      
+      for (let i = 0; i < count; i++) {
+        let vx, vy;
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 6 + 2;
+        
+        if (shape === 'SPHERE') {
+          vx = Math.cos(angle) * speed;
+          vy = Math.sin(angle) * speed;
+        } else if (shape === 'RING') {
+          const ringAngle = Math.random() * Math.PI * 2;
+          vx = Math.cos(ringAngle) * speed;
+          vy = Math.sin(ringAngle) * speed;
+        } else if (shape === 'STAR') {
+          const starAngle = (Math.floor(Math.random() * 5) * Math.PI * 2 / 5);
+          vx = Math.cos(starAngle) * speed;
+          vy = Math.sin(starAngle) * speed;
+        } else if (shape === 'HEART') {
+          const t = Math.random() * Math.PI * 2;
+          vx = speed * Math.sin(t) * Math.cos(t);
+          vy = speed * Math.sin(t) - 1;
+        } else if (shape === 'TEXT') {
+          vx = (Math.random() - 0.5) * 6;
+          vy = -Math.random() * 8 - 2;
+        } else {
+          vx = (Math.random() - 0.5) * 10;
+          vy = (Math.random() - 0.5) * 10;
+        }
+        
+        let color;
+        if (PARAMS.hue === -1) {
+          const h = Math.random() * 360;
+          color = `hsl(${h}, 100%, 60%)`;
+        } else {
+          const h = PARAMS.hue + (Math.random() - 0.5) * PARAMS.variance;
+          color = `hsl(${h}, 100%, 60%)`;
+        }
+        
+        particles.push(new Particle(x, y, vx, vy, color));
       }
       
-      for (let i = 0; i < PARAMS.particleCount; i++) {
-        particles.push(new Particle(x, y, shape, text));
+      // 文字烟花
+      if (shape === 'TEXT') {
+        const lines = PARAMS.textRaw.split('\n').filter(t => t.trim());
+        const text = lines[Math.floor(Math.random() * lines.length)] || '🎆';
+        drawTextParticles(text);
       }
     }
     
+    // --- 4. 渲染循环 ---
     function animate() {
       if (!isRunning) return;
       
+      // 拖尾效果
       ctx.fillStyle = `rgba(5, 5, 5, ${1 - PARAMS.trail})`;
       ctx.fillRect(0, 0, width, height);
       
-      fireworks = fireworks.filter(fw => {
-        fw.update();
-        fw.draw();
-        return !fw.isDead();
+      // 更新火箭
+      rockets = rockets.filter(r => {
+        r.update();
+        r.draw(ctx);
+        return !r.isDead();
       });
       
+      // 更新粒子
       particles = particles.filter(p => {
         p.update();
-        p.draw();
+        p.draw(ctx);
         return !p.isDead();
       });
       
       requestAnimationFrame(animate);
     }
     
-    // --- 手势识别 ---
+    // --- 5. 手势识别 ---
     function onResults(results) {
       if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
         document.querySelector('.gesture-hint').classList.add('visible');
         
         const landmarks = results.multiHandLandmarks[0];
-        
-        // 检测双指捏合 (pinch)
         const thumbTip = landmarks[4];
         const indexTip = landmarks[8];
         const distance = Math.hypot(
@@ -637,10 +649,9 @@
         const now = Date.now();
         if (distance < 50 && now - lastPinchTime > 500) {
           lastPinchTime = now;
-          // 在屏幕中心发射烟花
           for (let i = 0; i < 3; i++) {
             setTimeout(() => {
-              createFirework(
+              createRocket(
                 Math.random() * width * 0.6 + width * 0.2,
                 height * 0.3 + Math.random() * height * 0.2
               );
@@ -654,15 +665,15 @@
     
     async function initCamera() {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { facingMode: 'environment' } 
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment' }
         });
         video.srcObject = stream;
         video.play();
         
-        hands = new Hands({locateFile: (file) => {
-          return `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/${file}`;
-        }});
+        hands = new Hands({
+          locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/${file}`
+        });
         
         hands.setOptions({
           maxNumHands: 1,
@@ -690,17 +701,72 @@
       }
     }
     
-    // --- 启动 ---
+    // --- 6. UI 逻辑 ---
+    function initUI() {
+      // 形状切换
+      const btns = document.querySelectorAll('.shape-btn');
+      const textContainer = document.getElementById('text-input-container');
+      btns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          btns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          PARAMS.shape = btn.dataset.shape;
+          textContainer.style.display = PARAMS.shape === 'TEXT' ? 'block' : 'none';
+        });
+      });
+      
+      // 文本域监听
+      const textarea = document.getElementById('firework-text');
+      PARAMS.textRaw = textarea.value;
+      textarea.addEventListener('input', (e) => {
+        PARAMS.textRaw = e.target.value;
+      });
+      
+      // 绑定滑块
+      function bindSlider(id, key, dispId) {
+        const el = document.getElementById(id);
+        const disp = document.getElementById(dispId);
+        el.addEventListener('input', (e) => {
+          let val = parseFloat(e.target.value);
+          PARAMS[key] = val;
+          if (key === 'hue' && val === -1) disp.innerText = "彩色/随机";
+          else if (key === 'gravity') disp.innerText = (val / 100).toFixed(2);
+          else if (key === 'trail') disp.innerText = (val / 100).toFixed(2);
+          else disp.innerText = val;
+        });
+      }
+      
+      bindSlider('p-particles', 'particleCount', 'val-particles');
+      bindSlider('p-size', 'sizeScale', 'val-size');
+      bindSlider('p-gravity', 'gravity', 'val-gravity');
+      bindSlider('p-trail', 'trail', 'val-trail');
+      bindSlider('hue-slider', 'hue', 'val-hue');
+      bindSlider('p-brightness', 'brightness', 'val-brightness');
+      
+      // 面板开关
+      let visible = true;
+      const p = document.getElementById('control-panel');
+      const b = document.getElementById('toggle-panel');
+      b.addEventListener('click', () => {
+        visible = !visible;
+        p.style.transform = visible ? 'translateX(0)' : 'translateX(320px)';
+        b.style.right = visible ? '320px' : '10px';
+        b.classList.toggle('right', !visible);
+      });
+    }
+    
+    // --- 7. 启动 ---
     document.getElementById('start-btn').addEventListener('click', async () => {
       document.getElementById('overlay').classList.add('hidden');
       isRunning = true;
+      initUI();
       await initCamera();
       animate();
       
       // 自动发射
       setInterval(() => {
         if (isRunning && Math.random() < 0.2) {
-          createFirework(
+          createRocket(
             Math.random() * width * 0.7 + width * 0.15,
             height * 0.2 + Math.random() * height * 0.3
           );
@@ -708,75 +774,19 @@
       }, 600);
     });
     
-    // --- 交互事件 ---
+    // 点击事件
     canvas.addEventListener('click', (e) => {
       if (isRunning) {
-        createClickFirework(e.clientX, e.clientY);
+        createClickExplosion(e.clientX, e.clientY);
       }
     });
     
     canvas.addEventListener('touchstart', (e) => {
       if (isRunning) {
         for (let i = 0; i < e.touches.length; i++) {
-          createClickFirework(e.touches[i].clientX, e.touches[i].clientY);
+          createClickExplosion(e.touches[i].clientX, e.touches[i].clientY);
         }
       }
-    });
-    
-    // 控制面板
-    const controlPanel = document.getElementById('control-panel');
-    const toggleBtn = document.getElementById('toggle-panel');
-    
-    toggleBtn.addEventListener('click', () => {
-      controlPanel.classList.toggle('hidden');
-      toggleBtn.classList.toggle('right');
-      toggleBtn.style.right = controlPanel.classList.contains('hidden') ? '10px' : '320px';
-    });
-    
-    // 形状按钮
-    document.querySelectorAll('.shape-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.shape-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        PARAMS.shape = btn.dataset.shape;
-        document.getElementById('text-input-container').style.display = 
-          PARAMS.shape === 'text' ? 'block' : 'none';
-      });
-    });
-    
-    // 滑块事件
-    document.getElementById('p-particles').addEventListener('input', (e) => {
-      PARAMS.particleCount = parseInt(e.target.value);
-      document.getElementById('val-particles').textContent = PARAMS.particleCount;
-    });
-    
-    document.getElementById('p-gravity').addEventListener('input', (e) => {
-      PARAMS.gravity = parseInt(e.target.value) / 100;
-      document.getElementById('val-gravity').textContent = PARAMS.gravity.toFixed(2);
-    });
-    
-    document.getElementById('p-trail').addEventListener('input', (e) => {
-      PARAMS.trail = parseInt(e.target.value) / 100;
-      document.getElementById('val-trail').textContent = PARAMS.trail.toFixed(2);
-    });
-    
-    document.getElementById('p-size').addEventListener('input', (e) => {
-      PARAMS.sizeScale = parseFloat(e.target.value);
-      document.getElementById('val-size').textContent = PARAMS.sizeScale.toFixed(1);
-    });
-    
-    document.getElementById('p-brightness').addEventListener('input', (e) => {
-      PARAMS.brightness = parseFloat(e.target.value);
-      document.getElementById('val-brightness').textContent = PARAMS.brightness.toFixed(1);
-    });
-    
-    document.getElementById('hue-slider').addEventListener('input', (e) => {
-      PARAMS.hue = parseInt(e.target.value);
-      document.getElementById('val-hue').textContent = PARAMS.hue === -1 ? '彩色/随机' : PARAMS.hue;
-    });
-    
-    document.getElementById('firework-text').addEventListener('input', (e) => {
-      PARAMS.textRaw = e.target.value;
     });
   </script>
 </body>
