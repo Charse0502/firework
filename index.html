@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>赛博电子烟花 - V10</title>
+  <title>赛博电子烟花 - V11</title>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3/camera_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils@0.3/control_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/hands.js" crossorigin="anonymous"></script>
@@ -106,6 +106,7 @@
       letter-spacing: 2px;
       text-align: center;
       font-weight: bold;
+      text-shadow: 0 0 10px rgba(160,160,255,0.3);
     }
     
     h3 {
@@ -156,7 +157,7 @@
       background: #111;
       border: 1px solid #444;
       color: #fff;
-      padding:10px;
+      padding: 10px;
       border-radius: 6px;
       font-size: 14px;
       text-align: center;
@@ -201,7 +202,10 @@
       margin-top: -5px;
       cursor: pointer;
       box-shadow: 0 0 10px rgba(108, 92, 231, 0.8);
+      transition: transform 0.1s;
     }
+    
+    input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
     
     #hue-slider::-webkit-slider-runnable-track {
       background: linear-gradient(to right, red, yellow, lime, cyan, blue, magenta, red);
@@ -255,16 +259,16 @@
     
     <h3>烟花形状</h3>
     <div class="shape-grid">
-      <button class="shape-btn" data-shape="SPHERE">球形</button>
-      <button class="shape-btn" data-shape="RING">圆环</button>
-      <button class="shape-btn" data-shape="STAR">五角星</button>
-      <button class="shape-btn" data-shape="HEART">爱心</button>
-      <button class="shape-btn active" data-shape="TEXT">文字(定制)</button>
-      <button class="shape-btn" data-shape="RANDOM">随机</button>
+      <div class="shape-btn" data-shape="SPHERE">球形</div>
+      <div class="shape-btn" data-shape="RING">圆环</div>
+      <div class="shape-btn" data-shape="STAR">五角星</div>
+      <div class="shape-btn" data-shape="HEART">爱心</div>
+      <div class="shape-btn active" data-shape="TEXT">文字(定制)</div>
+      <div class="shape-btn" data-shape="RANDOM">随机</div>
     </div>
     
     <div id="text-input-container" style="display:block;">
-      <textarea id="firework-text">马到成功
+      <textarea id="firework-text" placeholder="在此输入文案，一行一句">马到成功
 新年快乐
 恭喜发财
 万事如意</textarea>
@@ -280,27 +284,24 @@
     <div class="control-group">
       <div class="label-row"><span>文字大小缩放</span><span id="val-size">1.0</span></div>
       <input type="range" id="p-size" min="0.5" max="2.0" step="0.1" value="1.0">
+      <div style="font-size:12px; color:#666">调节文字烟花炸开的整体尺寸</div>
     </div>
     
     <div class="control-group">
       <div class="label-row"><span>重力系数</span><span id="val-gravity">0.12</span></div>
-      <input type="range" id="p-gravity" min="0" max="30" value="12">
+      <input type="range" id="p-gravity" min="0" max="0.3" step="0.01" value="0.12">
     </div>
     
     <h3>视觉效果</h3>
     <div class="control-group">
       <div class="label-row"><span>拖尾长度</span><span id="val-trail">0.15</span></div>
-      <input type="range" id="p-trail" min="5" max="50" value="15">
+      <input type="range" id="p-trail" min="0.05" max="0.5" step="0.01" value="0.15">
+      <div style="font-size:12px; color:#666">往左滑拖尾更长</div>
     </div>
     
     <div class="control-group">
       <div class="label-row"><span>颜色基调</span><span id="val-hue">彩色/随机</span></div>
       <input type="range" id="hue-slider" min="-1" max="360" value="-1">
-    </div>
-    
-    <div class="control-group">
-      <div class="label-row"><span>亮度</span><span id="val-brightness">1.0</span></div>
-      <input type="range" id="p-brightness" min="0.2" max="2" step="0.1" value="1.0">
     </div>
   </div>
   
@@ -319,8 +320,7 @@
       friction: 0.96,
       trail: 0.15,
       hue: -1,
-      variance: 40,
-      brightness: 1.0
+      variance: 40
     };
     
     // --- 2. 画布初始化 ---
@@ -377,7 +377,7 @@
       
       draw(ctx) {
         ctx.save();
-        ctx.globalAlpha = this.alpha * PARAMS.brightness;
+        ctx.globalAlpha = this.alpha;
         ctx.fillStyle = this.color;
         ctx.beginPath();
         ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
@@ -408,7 +408,7 @@
         this.y += this.vy;
         
         this.trail.push({x: this.x, y: this.y});
-        if (this.trail.length > 20) {
+        if (this.trail.length > 8) {
           this.trail.shift();
         }
         
@@ -481,24 +481,28 @@
       }
       
       explodeText() {
+        // 1. 随机选取一行文本
         const lines = PARAMS.textRaw.split('\n').filter(l => l.trim() !== '');
         const text = lines.length > 0 ? lines[Math.floor(Math.random() * lines.length)] : "🎆";
         
+        // 2. 采样配置
         const fontSize = 150;
         textCtx.font = `bold ${fontSize}px "Microsoft YaHei", sans-serif`;
         const measure = textCtx.measureText(text);
         
+        // 3. 自动缩放算法 (Auto-Fit)
         const targetWidth = 300 * PARAMS.sizeScale;
         const scaleFactor = targetWidth / measure.width;
         
+        // 调整画布
         textCanvas.width = measure.width;
         textCanvas.height = fontSize * 1.5;
         
-        textCtx.clearRect(0, 0, textCanvas.width, textCanvas.height);
+        // 绘制
         textCtx.font = `bold ${fontSize}px "Microsoft YaHei", sans-serif`;
         textCtx.fillStyle = '#fff';
         textCtx.textBaseline = 'middle';
-        textCtx.fillText(text, textCanvas.width / 2, textCanvas.height / 2);
+        textCtx.fillText(text, 0, textCanvas.height / 2);
         
         const imgData = textCtx.getImageData(0, 0, textCanvas.width, textCanvas.height);
         const data = imgData.data;
@@ -512,8 +516,7 @@
               const pY = (py - textCanvas.height / 2) * scaleFactor;
               const speedMult = 0.15;
               
-              const h = PARAMS.hue === -1 ? Math.random() * 360 : PARAMS.hue + (Math.random() - 0.5) * PARAMS.variance;
-              
+              const h = this.hue + (Math.random() - 0.5) * PARAMS.variance;
               particles.push(new Particle(
                 this.x,
                 this.y,
@@ -550,6 +553,7 @@
       
       if (!isRunning) return;
       
+      ctx.globalCompositeOperation = 'source-over';
       ctx.fillStyle = `rgba(0, 0, 0, ${PARAMS.trail})`;
       ctx.fillRect(0, 0, width, height);
       
@@ -583,6 +587,14 @@
           (Math.random() - 0.5) * 2,
           `hsl(${hue}, 100%, 70%)`
         ));
+        
+        // 捏合时显示光圈
+        if (handState.pinching) {
+          ctx.fillStyle = `rgba(255, 255, 255, 0.8)`;
+          ctx.beginPath();
+          ctx.arc(handState.x, handState.y, 10 + Math.sin(Date.now() / 50) * 5, 0, Math.PI * 2);
+          ctx.fill();
+        }
       }
     }
     
@@ -593,8 +605,10 @@
         
         const lm = results.multiHandLandmarks[0];
         
-        handState.x = (1 - lm[8].x) * width;
-        handState.y = lm[8].y * height;
+        const x = (1 - lm[8].x) * width;
+        const y = lm[8].y * height;
+        handState.x = x;
+        handState.y = y;
         handState.detected = true;
         
         // 拇指位置
@@ -602,7 +616,7 @@
         const thumbY = lm[4].y * height;
         
         // 检测捏合
-        if (Math.hypot(handState.x - thumbX, handState.y - thumbY) < 40) {
+        if (Math.hypot(x - thumbX, y - thumbY) < 40) {
           if (!handState.pinching) {
             handState.pinching = true;
           }
@@ -631,14 +645,13 @@
         video.play();
         
         hands = new Hands({
-          locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/${file}`
+          locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
         });
         
         hands.setOptions({
           maxNumHands: 1,
           modelComplexity: 1,
-          minDetectionConfidence: 0.5,
-          minTrackingConfidence: 0.5
+          minDetectionConfidence: 0.5
         });
         
         hands.onResults(onResults);
@@ -663,6 +676,7 @@
     
     // --- 6. UI 逻辑 ---
     function initUI() {
+      // 形状切换
       const btns = document.querySelectorAll('.shape-btn');
       const textContainer = document.getElementById('text-input-container');
       btns.forEach(btn => {
@@ -674,12 +688,14 @@
         });
       });
       
+      // 文本域监听
       const textarea = document.getElementById('firework-text');
       PARAMS.textRaw = textarea.value;
       textarea.addEventListener('input', (e) => {
         PARAMS.textRaw = e.target.value;
       });
       
+      // 绑定滑块
       function bindSlider(id, key, dispId) {
         const el = document.getElementById(id);
         const disp = document.getElementById(dispId);
@@ -687,8 +703,6 @@
           let val = parseFloat(e.target.value);
           PARAMS[key] = val;
           if (key === 'hue' && val === -1) disp.innerText = "彩色/随机";
-          else if (key === 'gravity') disp.innerText = (val / 100).toFixed(2);
-          else if (key === 'trail') disp.innerText = (val / 100).toFixed(2);
           else disp.innerText = val;
         });
       }
@@ -698,8 +712,8 @@
       bindSlider('p-gravity', 'gravity', 'val-gravity');
       bindSlider('p-trail', 'trail', 'val-trail');
       bindSlider('hue-slider', 'hue', 'val-hue');
-      bindSlider('p-brightness', 'brightness', 'val-brightness');
       
+      // 面板开关
       let visible = true;
       const p = document.getElementById('control-panel');
       const b = document.getElementById('toggle-panel');
@@ -715,6 +729,7 @@
     document.getElementById('start-btn').addEventListener('click', () => {
       document.getElementById('start-btn').innerText = "系统启动中...";
       isRunning = true;
+      initUI();
       initCamera().then(() => {
         document.getElementById('overlay').style.display = 'none';
         animate();
