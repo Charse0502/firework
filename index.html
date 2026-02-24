@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>赛博电子烟花 - V9</title>
+  <title>赛博电子烟花 - V10</title>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3/camera_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils@0.3/control_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/hands.js" crossorigin="anonymous"></script>
@@ -156,7 +156,7 @@
       background: #111;
       border: 1px solid #444;
       color: #fff;
-      padding: 10px;
+      padding:10px;
       border-radius: 6px;
       font-size: 14px;
       text-align: center;
@@ -305,7 +305,7 @@
   </div>
   
   <div class="hint">👆 点击屏幕发射烟花</div>
-  <div class="gesture-hint">✌️ 双指捏合发射烟花</div>
+  <div class="gesture-hint">✌️ 捏合手指发射烟花</div>
 
   <script>
     // --- 1. 配置参数 ---
@@ -333,7 +333,6 @@
     let particles = [];
     let rockets = [];
     let isRunning = false;
-    let lastPinchTime = 0;
     let camera = null;
     let hands = null;
     
@@ -482,16 +481,13 @@
       }
       
       explodeText() {
-        // 1. 随机选取一行文本
         const lines = PARAMS.textRaw.split('\n').filter(l => l.trim() !== '');
         const text = lines.length > 0 ? lines[Math.floor(Math.random() * lines.length)] : "🎆";
         
-        // 2. 采样配置
         const fontSize = 150;
         textCtx.font = `bold ${fontSize}px "Microsoft YaHei", sans-serif`;
         const measure = textCtx.measureText(text);
         
-        // 3. 自动缩放算法 (Auto-Fit)
         const targetWidth = 300 * PARAMS.sizeScale;
         const scaleFactor = targetWidth / measure.width;
         
@@ -509,14 +505,13 @@
         
         const step = Math.max(2, Math.floor(textCanvas.width / 100));
         
-        for (let py = 0Canvas.height; py += step) {
-; py < text          for (let px = 0; px < textCanvas.width; px += step) {
+        for (let py = 0; py < textCanvas.height; py += step) {
+          for (let px = 0; px < textCanvas.width; px += step) {
             if (data[(py * textCanvas.width + px) * 4 + 3] > 128) {
-              // 坐标转换
               const pX = (px - textCanvas.width / 2) * scaleFactor;
               const pY = (py - textCanvas.height / 2) * scaleFactor;
-              
               const speedMult = 0.15;
+              
               const h = PARAMS.hue === -1 ? Math.random() * 360 : PARAMS.hue + (Math.random() - 0.5) * PARAMS.variance;
               
               particles.push(new Particle(
@@ -555,7 +550,6 @@
       
       if (!isRunning) return;
       
-      // 拖尾效果
       ctx.fillStyle = `rgba(0, 0, 0, ${PARAMS.trail})`;
       ctx.fillRect(0, 0, width, height);
       
@@ -589,13 +583,6 @@
           (Math.random() - 0.5) * 2,
           `hsl(${hue}, 100%, 70%)`
         ));
-        
-        if (handState.pinching) {
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-          ctx.beginPath();
-          ctx.arc(handState.x, handState.y, 10 + Math.sin(Date.now() / 50) * 5, 0, Math.PI * 2);
-          ctx.fill();
-        }
       }
     }
     
@@ -610,25 +597,20 @@
         handState.y = lm[8].y * height;
         handState.detected = true;
         
-        const thumbTip = lm[4];
-        const indexTip = lm[8];
-        const distance = Math.hypot(
-          (indexTip.x - thumbTip.x) * width,
-          (indexTip.y - thumbTip.y) * height
-        );
+        // 拇指位置
+        const thumbX = (1 - lm[4].x) * width;
+        const thumbY = lm[4].y * height;
         
-        handState.pinching = distance < 50;
-        
-        const now = Date.now();
-        if (distance < 50 && now - lastPinchTime > 500) {
-          lastPinchTime = now;
-          for (let i = 0; i < 3; i++) {
-            setTimeout(() => {
-              createRocket(
-                Math.random() * width * 0.6 + width * 0.2,
-                height * 0.8
-              );
-            }, i * 100);
+        // 检测捏合
+        if (Math.hypot(handState.x - thumbX, handState.y - thumbY) < 40) {
+          if (!handState.pinching) {
+            handState.pinching = true;
+          }
+        } else {
+          if (handState.pinching) {
+            // 松开时发射火箭
+            rockets.push(new Rocket(handState.x, handState.y));
+            handState.pinching = false;
           }
         }
       } else {
@@ -639,6 +621,8 @@
     }
     
     async function initCamera() {
+      const video = document.getElementById('input_video');
+      
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: 'environment' }
@@ -669,10 +653,11 @@
           height: 480
         });
         
-        camera.start();
+        return camera.start();
       } catch (err) {
         console.log('Camera not available:', err);
         document.getElementById('loading-text').textContent = '摄像头不可用，但你可以点击屏幕发射烟花';
+        return Promise.resolve();
       }
     }
     
@@ -727,23 +712,26 @@
     }
     
     // --- 7. 启动 ---
-    document.getElementById('start-btn').addEventListener('click', async () => {
-      document.getElementById('overlay').classList.add('hidden');
+    document.getElementById('start-btn').addEventListener('click', () => {
+      document.getElementById('start-btn').innerText = "系统启动中...";
       isRunning = true;
-      initUI();
-      await initCamera();
-      animate();
-      
-      setInterval(() => {
-        if (isRunning && Math.random() < 0.2) {
-          createRocket(
-            Math.random() * width * 0.7 + width * 0.15,
-            height * 0.8
-          );
-        }
-      }, 600);
+      initCamera().then(() => {
+        document.getElementById('overlay').style.display = 'none';
+        animate();
+        
+        // 自动发射
+        setInterval(() => {
+          if (isRunning && Math.random() < 0.2) {
+            createRocket(
+              Math.random() * width * 0.7 + width * 0.15,
+              height * 0.8
+            );
+          }
+        }, 600);
+      });
     });
     
+    // 点击事件
     canvas.addEventListener('click', (e) => {
       if (isRunning) {
         createClickExplosion(e.clientX, e.clientY);
