@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>赛博电子烟花</title>
   <style>
     * {
@@ -12,127 +12,195 @@
     }
     
     body {
-      background: #000;
+      margin: 0;
       overflow: hidden;
-      touch-action: none;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background-color: #050505;
+      font-family: "Microsoft YaHei", sans-serif;
     }
     
-    #canvas {
+    canvas {
       display: block;
       width: 100vw;
       height: 100vh;
     }
     
-    .controls {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: rgba(0, 0, 0, 0.7);
-      padding: 20px;
+    #input_video {
+      display: none;
+    }
+    
+    /* 控制台样式 - 参考原版 */
+    #control-panel {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 300px;
+      max-height: 95vh;
+      background: rgba(15, 15, 25, 0.95);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 12px;
+      padding: 20px;
+      overflow-y: auto;
       color: #fff;
-      font-size: 14px;
-      max-width: 280px;
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: 0 0 30px rgba(0,0,0,0.6);
+      z-index: 100;
+      transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+      scrollbar-width: thin;
+      scrollbar-color: #555 #1a1a1a;
     }
     
-    .controls h3 {
-      margin-bottom: 15px;
-      font-size: 16px;
-      color: #ff6b6b;
+    #control-panel.hidden {
+      transform: translateX(320px);
     }
     
-    .control-group {
-      margin-bottom: 15px;
-    }
-    
-    .control-group label {
-      display: block;
-      margin-bottom: 8px;
-      color: #aaa;
-      font-size: 12px;
-    }
-    
-    .shape-buttons {
+    #toggle-panel {
+      position: absolute;
+      top: 10px;
+      right: 320px;
+      width: 40px;
+      height: 40px;
+      background: rgba(15, 15, 25, 0.8);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      color: white;
+      cursor: pointer;
+      z-index: 101;
       display: flex;
-      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      font-size: 20px;
+      transition: right 0.3s ease;
+    }
+    
+    #toggle-panel.right {
+      right: 10px;
+    }
+    
+    h2 {
+      margin: 0 0 15px 0;
+      font-size: 20px;
+      color: #a0a0ff;
+      letter-spacing: 2px;
+      text-align: center;
+      font-weight: bold;
+      text-shadow: 0 0 10px rgba(160,160,255,0.3);
+    }
+    
+    h3 {
+      margin: 15px 0 10px 0;
+      font-size: 14px;
+      color: #888;
+      border-bottom: 1px solid #333;
+      padding-bottom: 5px;
+    }
+    
+    /* 形状按钮 */
+    .shape-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
       gap: 8px;
+      margin-bottom: 15px;
     }
     
     .shape-btn {
-      padding: 8px 12px;
-      background: rgba(255,255,255,0.1);
-      border: 1px solid rgba(255,255,255,0.2);
+      background: #1a1a25;
+      border: 1px solid #333;
+      color: #aaa;
+      padding: 8px;
       border-radius: 6px;
-      color: #fff;
       cursor: pointer;
-      font-size: 12px;
+      font-size: 13px;
+      text-align: center;
       transition: all 0.2s;
-    }
-    
-    .shape-btn.active {
-      background: #ff6b6b;
-      border-color: #ff6b6b;
     }
     
     .shape-btn:hover {
-      background: rgba(255,107,107,0.3);
+      background: #333;
     }
     
-    .slider-container {
-      display: flex;
-      align-items: center;
-      gap: 10px;
+    .shape-btn.active {
+      background: #fff;
+      color: #000;
+      border-color: #fff;
+      box-shadow: 0 0 15px rgba(255,255,255,0.4);
+      font-weight: bold;
     }
     
-    .slider-container input[type="range"] {
-      flex: 1;
-      -webkit-appearance: none;
-      height: 4px;
-      background: rgba(255,255,255,0.2);
-      border-radius: 2px;
-      outline: none;
+    /* 多行文本框 */
+    #text-input-container {
+      margin-bottom: 15px;
+      display: none;
     }
     
-    .slider-container input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 16px;
-      height: 16px;
-      background: #ff6b6b;
-      border-radius: 50%;
-      cursor: pointer;
-    }
-    
-    .slider-value {
-      min-width: 40px;
-      text-align: right;
-      color: #ff6b6b;
-    }
-    
-    .color-btns {
-      display: flex;
-      gap: 8px;
-    }
-    
-    .color-btn {
-      flex: 1;
-      padding: 8px;
-      background: rgba(255,255,255,0.1);
-      border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 6px;
+    textarea#firework-text {
+      width: 100%;
+      height: 80px;
+      box-sizing: border-box;
+      background: #111;
+      border: 1px solid #444;
       color: #fff;
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 14px;
+      text-align: center;
+      resize: vertical;
+      font-family: "Microsoft YaHei", sans-serif;
+      line-height: 1.5;
+    }
+    
+    textarea#firework-text:focus {
+      outline: none;
+      border-color: #6c5ce7;
+    }
+    
+    /* 滑块 */
+    .control-group {
+      margin-bottom: 12px;
+    }
+    
+    .label-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+      font-size: 13px;
+      color: #ccc;
+    }
+    
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      background: transparent;
+      margin: 5px 0;
+    }
+    
+    input[type=range]::-webkit-slider-runnable-track {
+      width: 100%;
+      height: 6px;
+      background: #333;
+      border-radius: 3px;
+    }
+    
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 16px;
+      width: 16px;
+      border-radius: 50%;
+      background: #6c5ce7;
+      margin-top: -5px;
       cursor: pointer;
-      font-size: 12px;
-      transition: all 0.2s;
+      box-shadow: 0 0 10px rgba(108, 92, 231, 0.8);
+      transition: transform 0.1s;
     }
     
-    .color-btn.active {
-      background: #ff6b6b;
-      border-color: #ff6b6b;
+    input[type=range]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
     }
     
+    #hue-slider::-webkit-slider-runnable-track {
+      background: linear-gradient(to right, red, yellow, lime, cyan, blue, magenta, red);
+    }
+    
+    /* 提示文字 */
     .hint {
       position: fixed;
       bottom: 30px;
@@ -149,103 +217,118 @@
       50% { opacity: 1; }
     }
     
-    .settings-btn {
-      position: fixed;
-      top: 20px;
-      left: 20px;
-      width: 40px;
-      height: 40px;
-      background: rgba(0,0,0,0.5);
-      border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 50%;
-      color: #fff;
-      font-size: 20px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    
-    .hidden {
-      display: none !important;
+    /* 隐藏面板时的提示位置 */
+    #control-panel.hidden + #toggle-panel + .hint {
+      left: calc(50% - 150px);
     }
   </style>
 </head>
 <body>
+  <video id="input_video" autoplay playsinline></video>
   <canvas id="canvas"></canvas>
   
-  <button class="settings-btn" id="toggleBtn">⚙️</button>
+  <button id="toggle-panel">⚙️</button>
   
-  <div class="controls" id="controls">
-    <h3>🎆 烟花形状</h3>
+  <div id="control-panel">
+    <h2>🎆 赛博电子烟花</h2>
+    
+    <h3>烟花形状</h3>
+    <div class="shape-grid">
+      <button class="shape-btn active" data-shape="sphere">球形</button>
+      <button class="shape-btn" data-shape="ring">圆环</button>
+      <button class="shape-btn" data-shape="star">五角星</button>
+      <button class="shape-btn" data-shape="heart">爱心</button>
+      <button class="shape-btn" data-shape="text">文字</button>
+      <button class="shape-btn" data-shape="random">随机</button>
+    </div>
+    
+    <div id="text-input-container">
+      <textarea id="firework-text" placeholder="请输入文字，使用逗号分隔多行&#10;例如：新年快乐,万事如意,恭喜发财"></textarea>
+    </div>
+    
+    <h3>物理参数</h3>
     <div class="control-group">
-      <div class="shape-buttons">
-        <button class="shape-btn active" data-shape="sphere">球形</button>
-        <button class="shape-btn" data-shape="ring">圆环</button>
-        <button class="shape-btn" data-shape="star">五角星</button>
-        <button class="shape-btn" data-shape="heart">爱心</button>
-        <button class="shape-btn" data-shape="text">文字</button>
-        <button class="shape-btn" data-shape="random">随机</button>
+      <div class="label-row">
+        <span>粒子数量</span>
+        <span id="particle-count-val">300</span>
       </div>
+      <input type="range" id="particle-count" min="50" max="500" value="300">
     </div>
     
-    <div class="control-group" id="textInputGroup" style="display:none;">
-      <label>自定义文字（逗号分隔多行）</label>
-      <input type="text" id="textInput" placeholder="新年快乐,万事如意" 
-             style="width:100%;padding:8px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:6px;color:#fff;">
-    </div>
-    
-    <h3>⚙️ 物理参数</h3>
     <div class="control-group">
-      <label>粒子数量</label>
-      <div class="slider-container">
-        <input type="range" id="particleCount" min="50" max="500" value="150">
-        <span class="slider-value" id="particleCountVal">150</span>
+      <div class="label-row">
+        <span>文字大小缩放</span>
+        <span id="text-scale-val">1.0</span>
       </div>
+      <input type="range" id="text-scale" min="0.5" max="3" step="0.1" value="1.0">
     </div>
     
     <div class="control-group">
-      <label>重力系数</label>
-      <div class="slider-container">
-        <input type="range" id="gravity" min="0" max="30" value="12">
-        <span class="slider-value" id="gravityVal">0.12</span>
+      <div class="label-row">
+        <span>重力系数</span>
+        <span id="gravity-val">0.12</span>
       </div>
+      <input type="range" id="gravity" min="0" max="30" value="12">
     </div>
     
-    <h3>🎨 视觉效果</h3>
+    <h3>视觉效果</h3>
     <div class="control-group">
-      <label>拖尾长度</label>
-      <div class="slider-container">
-        <input type="range" id="trail" min="0" max="50" value="15">
-        <span class="slider-value" id="trailVal">0.15</span>
+      <div class="label-row">
+        <span>拖尾长度</span>
+        <span id="trail-val">0.15</span>
       </div>
+      <input type="range" id="trail" min="0" max="50" value="15">
     </div>
     
     <div class="control-group">
-      <label>颜色基调</label>
-      <div class="color-btns">
+      <div class="label-row">
+        <span>颜色基调</span>
+      </div>
+      <div class="shape-grid">
         <button class="color-btn active" data-color="rainbow">彩色</button>
         <button class="color-btn" data-color="red">红色</button>
         <button class="color-btn" data-color="blue">蓝色</button>
         <button class="color-btn" data-color="green">绿色</button>
         <button class="color-btn" data-color="gold">金色</button>
+        <button class="color-btn" data-color="purple">紫色</button>
       </div>
+    </div>
+    
+    <div class="control-group">
+      <div class="label-row">
+        <span>亮度</span>
+        <span id="brightness-val">1.0</span>
+      </div>
+      <input type="range" id="brightness" min="0.2" max="2" step="0.1" value="1.0">
+    </div>
+    
+    <div class="control-group">
+      <div class="label-row">
+        <span>爆炸力度</span>
+        <span id="explode-val">1.0</span>
+      </div>
+      <input type="range" id="explode" min="0.3" max="2" step="0.1" value="1.0">
     </div>
   </div>
   
-  <div class="hint">👆 点击/触摸屏幕发射烟花</div>
+  <div class="hint">👆 点击/捏合手指发射烟花</div>
 
   <script>
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
+    const video = document.getElementById('input_video');
     
     let width, height;
     let particles = [];
+    let fireworks = [];
     let currentShape = 'sphere';
     let currentColor = 'rainbow';
-    let particleCount = 150;
+    let particleCount = 300;
     let gravity = 0.12;
     let trailLength = 0.15;
+    let textScale = 1.0;
+    let brightness = 1.0;
+    let explodeForce = 1.0;
     let textLines = ['新年快乐', '万事如意'];
     let customText = '';
     
@@ -260,99 +343,198 @@
     // 颜色配置
     const colorPalettes = {
       rainbow: null,
-      red: ['#ff0000', '#ff4444', '#ff6666', '#ff8888', '#ffaaaa'],
-      blue: ['#0000ff', '#4444ff', '#6666ff', '#8888ff', '#aaaaff'],
-      green: ['#00ff00', '#44ff44', '#66ff66', '#88ff88', '#aaffaa'],
-      gold: ['#ffd700', '#ffec8b', '#f0e68c', '#ffa500', '#ff8c00']
+      red: ['#ff0000', '#ff1744', '#ff5252', '#ff8a80', '#ffcdd2'],
+      blue: ['#0000ff', '#2979ff', '#448aff', '#82b1ff', '#bbdefb'],
+      green: ['#00ff00', '#00e676', '#69f0ae', '#b9f6ca', '#004d40'],
+      gold: ['#ffd700', '#ffec8b', '#f0e68c', '#ffa500', '#ff8c00'],
+      purple: ['#9c27b0', '#e040fb', '#ea80fc', '#f3e5f5', '#4a148c']
     };
     
     function getColor() {
       if (currentColor === 'rainbow') {
         const hue = Math.random() * 360;
-        return `hsl(${hue}, 100%, 60%)`;
+        return `hsl(${hue}, 100%, ${60 * brightness}%)`;
       }
       const palette = colorPalettes[currentColor];
       return palette[Math.floor(Math.random() * palette.length)];
     }
     
+    // 粒子类
     class Particle {
-      constructor(x, y, shape = 'sphere', text = '') {
+      constructor(x, y, shape = 'sphere', text = '', isMain = false) {
         this.x = x;
         this.y = y;
         this.shape = shape;
         this.text = text;
+        this.isMain = isMain;
         this.init();
       }
       
       init() {
         this.life = 1;
-        this.decay = 0.015 + Math.random() * 0.01;
+        this.decay = 0.012 + Math.random() * 0.008;
         
         const angle = Math.random() * Math.PI * 2;
-        const speed = Math.random() * 8 + 2;
+        const speed = (Math.random() * 8 + 2) * explodeForce;
         
         if (this.shape === 'sphere') {
           this.vx = Math.cos(angle) * speed;
           this.vy = Math.sin(angle) * speed;
         } else if (this.shape === 'ring') {
           const ringAngle = Math.random() * Math.PI * 2;
-          const ringSpeed = 3 + Math.random() * 2;
+          const ringSpeed = (3 + Math.random() * 2) * explodeForce;
           this.vx = Math.cos(ringAngle) * ringSpeed;
           this.vy = Math.sin(ringAngle) * ringSpeed;
         } else if (this.shape === 'star') {
-          const starAngle = (Math.random() * 5) * Math.PI * 2 / 5;
-          const starSpeed = Math.random() * 6 + 2;
+          const starAngle = (Math.floor(Math.random() * 5) * Math.PI * 2 / 5) + (Math.random() - 0.5) * 0.5;
+          const starSpeed = (Math.random() * 6 + 2) * explodeForce;
           this.vx = Math.cos(starAngle) * starSpeed;
           this.vy = Math.sin(starAngle) * starSpeed;
         } else if (this.shape === 'heart') {
           const t = Math.random() * Math.PI * 2;
-          const heartSpeed = Math.random() * 5 + 2;
+          const heartSpeed = (Math.random() * 5 + 2) * explodeForce;
           this.vx = heartSpeed * Math.sin(t) * Math.cos(t);
           this.vy = heartSpeed * Math.sin(t) - 1;
         } else if (this.shape === 'text' && this.text) {
-          this.vx = (Math.random() - 0.5) * 6;
-          this.vy = -Math.random() * 8 - 2;
+          this.vx = (Math.random() - 0.5) * 6 * explodeForce;
+          this.vy = -Math.random() * 8 * explodeForce - 2;
           this.charIndex = Math.floor(Math.random() * this.text.length);
           this.char = this.text[this.charIndex];
+          this.angle = Math.random() * Math.PI * 2;
+          this.angularVelocity = (Math.random() - 0.5) * 0.2;
         } else {
-          this.vx = (Math.random() - 0.5) * 10;
-          this.vy = (Math.random() - 0.5) * 10;
+          this.vx = (Math.random() - 0.5) * 10 * explodeForce;
+          this.vy = (Math.random() - 0.5) * 10 * explodeForce;
         }
         
         this.color = getColor();
         this.size = Math.random() * 3 + 2;
+        this.originalSize = this.size;
       }
       
       update() {
         this.x += this.vx;
         this.y += this.vy;
         this.vy += gravity;
+        this.vx *= 0.99; // 空气阻力
         this.life -= this.decay;
-        this.size *= 0.99;
+        
+        if (this.shape === 'text' && this.char) {
+          this.angle += this.angularVelocity;
+        }
+        
+        this.size = this.originalSize * this.life;
       }
       
       draw() {
-        ctx.beginPath();
-        ctx.fillStyle = this.color;
-        ctx.globalAlpha = this.life;
+        ctx.save();
+        ctx.globalAlpha = this.life * brightness;
         
         if (this.shape === 'text' && this.char) {
-          ctx.font = `${this.size * 8}px Arial`;
-          ctx.fillText(this.char, this.x, this.y);
+          ctx.translate(this.x, this.y);
+          ctx.rotate(this.angle);
+          ctx.font = `${this.size * 12 * textScale}px "Microsoft YaHei", Arial`;
+          ctx.fillStyle = this.color;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.shadowColor = this.color;
+          ctx.shadowBlur = 10;
+          ctx.fillText(this.char, 0, 0);
         } else {
+          ctx.beginPath();
+          ctx.fillStyle = this.color;
+          ctx.shadowColor = this.color;
+          ctx.shadowBlur = 8;
           ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
           ctx.fill();
         }
         
-        ctx.globalAlpha = 1;
+        ctx.restore();
       }
       
       isDead() {
-        return this.life <= 0 || this.size < 0.5;
+        return this.life <= 0 || this.size < 0.3;
+      }
+    }
+    
+    // 烟花发射器类
+    class Firework {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.vy = -12 - Math.random() * 4;
+        this.exploded = false;
+        this.trail = [];
+      }
+      
+      update() {
+        if (!this.exploded) {
+          this.y += this.vy;
+          this.vy += 0.15;
+          
+          this.trail.push({x: this.x, y: this.y, life: 1});
+          this.trail = this.trail.filter(t => {
+            t.life -= 0.05;
+            return t.life > 0;
+          });
+          
+          if (this.vy >= 0) {
+            this.explode();
+          }
+        }
+      }
+      
+      explode() {
+        this.exploded = true;
+        
+        let shape = currentShape;
+        if (shape === 'random') {
+          const shapes = ['sphere', 'ring', 'star', 'heart'];
+          shape = shapes[Math.floor(Math.random() * shapes.length)];
+        }
+        
+        let text = '';
+        if (shape === 'text') {
+          const allText = customText || textLines.join(',');
+          const lines = allText.split(',').filter(t => t.trim());
+          text = lines[Math.floor(Math.random() * lines.length)] || '🎆';
+        }
+        
+        for (let i = 0; i < particleCount; i++) {
+          particles.push(new Particle(this.x, this.y, shape, text, true));
+        }
+      }
+      
+      draw() {
+        // 绘制发射轨迹
+        this.trail.forEach(t => {
+          ctx.beginPath();
+          ctx.fillStyle = `rgba(255, 100, 50, ${t.life * 0.5})`;
+          ctx.arc(t.x, t.y, 3 * t.life, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        
+        // 绘制发射弹
+        if (!this.exploded) {
+          ctx.beginPath();
+          ctx.fillStyle = '#ff6432';
+          ctx.shadowColor = '#ff6432';
+          ctx.shadowBlur = 15;
+          ctx.arc(this.x, this.y, 4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      
+      isDead() {
+        return this.exploded;
       }
     }
     
     function createFirework(x, y) {
+      fireworks.push(new Firework(x, y));
+    }
+    
+    function createClickFirework(x, y) {
       let shape = currentShape;
       if (shape === 'random') {
         const shapes = ['sphere', 'ring', 'star', 'heart'];
@@ -373,8 +555,19 @@
     
     function animate() {
       // 拖尾效果
-      ctx.fillStyle = `rgba(0, 0, 0, ${1 - trailLength})`;
+      ctx.fillStyle = `rgba(5, 5, 5, ${1 - trailLength})`;
       ctx.fillRect(0, 0, width, height);
+      
+      // 绘制背景
+      ctx.fillStyle = 'rgba(5, 5, 5, 0.1)';
+      ctx.fillRect(0, 0, width, height);
+      
+      // 更新和绘制烟花
+      fireworks = fireworks.filter(fw => {
+        fw.update();
+        fw.draw();
+        return !fw.isDead();
+      });
       
       // 更新和绘制粒子
       particles = particles.filter(p => {
@@ -387,28 +580,58 @@
     }
     
     // 事件监听
+    let lastTouchTime = 0;
+    
     canvas.addEventListener('click', (e) => {
-      createFirework(e.clientX, e.clientY);
+      createClickFirework(e.clientX, e.clientY);
     });
     
     canvas.addEventListener('touchstart', (e) => {
       e.preventDefault();
-      for (let i = 0; i < e.touches.length; i++) {
-        createFirework(e.touches[i].clientX, e.touches[i].clientY);
+      const now = Date.now();
+      
+      if (now - lastTouchTime < 300) {
+        // 双击 - 发射烟花弹
+        for (let i = 0; i < 3; i++) {
+          setTimeout(() => {
+            createFirework(
+              Math.random() * width * 0.6 + width * 0.2,
+              height * 0.3 + Math.random() * height * 0.2
+            );
+          }, i * 100);
+        }
+      } else {
+        // 单击 - 发射粒子
+        for (let i = 0; i < e.touches.length; i++) {
+          createClickFirework(e.touches[i].clientX, e.touches[i].clientY);
+        }
       }
+      
+      lastTouchTime = now;
     });
     
     // 触摸移动发射
     canvas.addEventListener('touchmove', (e) => {
       e.preventDefault();
-      if (Math.random() < 0.3) {
-        createFirework(e.touches[0].clientX, e.touches[0].clientY);
+      if (Math.random() < 0.2) {
+        createClickFirework(e.touches[0].clientX, e.touches[0].clientY);
       }
     });
     
     // 控件事件
-    document.getElementById('toggleBtn').addEventListener('click', () => {
-      document.getElementById('controls').classList.toggle('hidden');
+    const controlPanel = document.getElementById('control-panel');
+    const toggleBtn = document.getElementById('toggle-panel');
+    
+    toggleBtn.addEventListener('click', () => {
+      controlPanel.classList.toggle('hidden');
+      toggleBtn.classList.toggle('right');
+      if (controlPanel.classList.contains('hidden')) {
+        toggleBtn.style.right = '10px';
+        controlPanel.style.transform = 'translateX(320px)';
+      } else {
+        toggleBtn.style.right = '320px';
+        controlPanel.style.transform = 'translateX(0)';
+      }
     });
     
     // 形状按钮
@@ -417,7 +640,7 @@
         document.querySelectorAll('.shape-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         currentShape = btn.dataset.shape;
-        document.getElementById('textInputGroup').style.display = 
+        document.getElementById('text-input-container').style.display = 
           currentShape === 'text' ? 'block' : 'none';
       });
     });
@@ -432,34 +655,49 @@
     });
     
     // 滑块
-    document.getElementById('particleCount').addEventListener('input', (e) => {
+    document.getElementById('particle-count').addEventListener('input', (e) => {
       particleCount = parseInt(e.target.value);
-      document.getElementById('particleCountVal').textContent = particleCount;
+      document.getElementById('particle-count-val').textContent = particleCount;
     });
     
     document.getElementById('gravity').addEventListener('input', (e) => {
       gravity = parseInt(e.target.value) / 100;
-      document.getElementById('gravityVal').textContent = gravity.toFixed(2);
+      document.getElementById('gravity-val').textContent = gravity.toFixed(2);
     });
     
     document.getElementById('trail').addEventListener('input', (e) => {
       trailLength = parseInt(e.target.value) / 100;
-      document.getElementById('trailVal').textContent = trailLength.toFixed(2);
+      document.getElementById('trail-val').textContent = trailLength.toFixed(2);
+    });
+    
+    document.getElementById('text-scale').addEventListener('input', (e) => {
+      textScale = parseFloat(e.target.value);
+      document.getElementById('text-scale-val').textContent = textScale.toFixed(1);
+    });
+    
+    document.getElementById('brightness').addEventListener('input', (e) => {
+      brightness = parseFloat(e.target.value);
+      document.getElementById('brightness-val').textContent = brightness.toFixed(1);
+    });
+    
+    document.getElementById('explode').addEventListener('input', (e) => {
+      explodeForce = parseFloat(e.target.value);
+      document.getElementById('explode-val').textContent = explodeForce.toFixed(1);
     });
     
     // 文字输入
-    document.getElementById('textInput').addEventListener('input', (e) => {
+    document.getElementById('firework-text').addEventListener('input', (e) => {
       customText = e.target.value;
     });
     
     // 自动发射
     setInterval(() => {
-      if (Math.random() < 0.3) {
-        const x = Math.random() * width * 0.8 + width * 0.1;
-        const y = Math.random() * height * 0.5 + height * 0.1;
+      if (Math.random() < 0.25) {
+        const x = Math.random() * width * 0.7 + width * 0.15;
+        const y = height * 0.2 + Math.random() * height * 0.3;
         createFirework(x, y);
       }
-    }, 500);
+    }, 600);
     
     animate();
   </script>
